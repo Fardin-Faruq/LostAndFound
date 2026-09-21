@@ -1,11 +1,15 @@
 import { Request, Response } from 'express';
+import bcrypt from 'bcryptjs';
 import { User } from '../models/User';
-import jwt from 'jsonwebtoken';
+import jwt, { SignOptions } from 'jsonwebtoken';
 import { AuthRequest } from '../middleware/authMiddleware';
 
 const generateToken = (id: string) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET || 'secret', {
-    expiresIn: process.env.JWT_EXPIRES_IN || '30d',
+  const secret = process.env.JWT_SECRET || 'secret';
+  const expiresIn = (process.env.JWT_EXPIRES_IN || '30d') as SignOptions['expiresIn'];
+
+  return jwt.sign({ id }, secret, {
+    expiresIn,
   });
 };
 
@@ -20,10 +24,13 @@ export const registerUser = async (req: Request, res: Response) => {
       return;
     }
 
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(password, salt);
+
     const user = await User.create({
       name,
       email,
-      passwordHash: password,
+      passwordHash,
     });
 
     if (user) {
@@ -32,7 +39,7 @@ export const registerUser = async (req: Request, res: Response) => {
         name: user.name,
         email: user.email,
         role: user.role,
-        token: generateToken(user._id as string),
+        token: generateToken(String(user._id)),
       });
     } else {
       res.status(400).json({ message: 'Invalid user data' });
@@ -54,7 +61,7 @@ export const loginUser = async (req: Request, res: Response) => {
         name: user.name,
         email: user.email,
         role: user.role,
-        token: generateToken(user._id as string),
+        token: generateToken(String(user._id)),
       });
     } else {
       res.status(401).json({ message: 'Invalid email or password' });

@@ -20,7 +20,7 @@ export const createItem = async (req: AuthRequest, res: Response) => {
       color,
       location,
       dateLostOrFound,
-      reporter: req.user._id,
+      reporter: req.user._id as any,
     });
 
     res.status(201).json(item);
@@ -32,8 +32,8 @@ export const createItem = async (req: AuthRequest, res: Response) => {
 export const getItems = async (req: AuthRequest, res: Response) => {
   try {
     const { type } = req.query;
-    const filter = type ? { type } : {};
-    
+    const filter: any = type ? { type } : {};
+
     const items = await Item.find(filter).sort({ createdAt: -1 }).populate('reporter', 'name email');
     res.json(items);
   } catch (error: any) {
