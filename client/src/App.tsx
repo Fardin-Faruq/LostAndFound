@@ -6,6 +6,9 @@ import Register from './pages/Register';
 import ReportLost from './pages/ReportLost';
 import ReportFound from './pages/ReportFound';
 import BrowseItems from './pages/BrowseItems';
+import ItemDetails from './pages/ItemDetails';
+import OfficeDashboard from './pages/OfficeDashboard';
+import MyDashboard from './pages/MyDashboard';
 
 function App() {
   return (
@@ -20,6 +23,9 @@ function App() {
             <Route path="/report-lost" element={<ReportLost />} />
             <Route path="/report-found" element={<ReportFound />} />
             <Route path="/browse" element={<BrowseItems />} />
+            <Route path="/items/:id" element={<ItemDetails />} />
+            <Route path="/office" element={<OfficeDashboard />} />
+            <Route path="/dashboard" element={<MyDashboard />} />
           </Routes>
         </main>
         <footer className="bg-gray-800 text-white py-6 text-center">

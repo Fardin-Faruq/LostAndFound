@@ -15,6 +15,10 @@ const Navbar = () => {
             <>
               <Link to="/report-lost" className="hover:text-indigo-200">Report Lost</Link>
               <Link to="/report-found" className="hover:text-indigo-200">Report Found</Link>
+              <Link to="/dashboard" className="hover:text-indigo-200">My Dashboard</Link>
+              {user.role === 'ADMIN' && (
+                <Link to="/office" className="hover:text-indigo-200">Office</Link>
+              )}
               <span className="font-semibold ml-4">Hello, {user.name}</span>
               <button onClick={logout} className="bg-indigo-700 px-3 py-1 rounded hover:bg-indigo-800">Logout</button>
             </>

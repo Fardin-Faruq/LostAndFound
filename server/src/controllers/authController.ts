@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 import { User } from '../models/User';
 import jwt, { SignOptions } from 'jsonwebtoken';
 import { AuthRequest } from '../middleware/authMiddleware';
@@ -15,9 +16,10 @@ const generateToken = (id: string) => {
 
 export const registerUser = async (req: Request, res: Response) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, role } = req.body;
+    const normalizedRole = role === 'ADMIN' ? 'ADMIN' : 'STUDENT';
 
-    const userExists = await User.findOne({ email });
+    const userExists = await User.findOne({ email: String(email).toLowerCase() });
 
     if (userExists) {
       res.status(400).json({ message: 'User already exists' });
@@ -25,12 +27,13 @@ export const registerUser = async (req: Request, res: Response) => {
     }
 
     const salt = await bcrypt.genSalt(10);
-    const passwordHash = await bcrypt.hash(password, salt);
+    const passwordHash = await bcrypt.hash(String(password), salt);
 
     const user = await User.create({
-      name,
-      email,
+      name: String(name).trim(),
+      email: String(email).toLowerCase(),
       passwordHash,
+      role: normalizedRole,
     });
 
     if (user) {
@@ -53,9 +56,9 @@ export const loginUser = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: String(email).toLowerCase() });
 
-    if (user && (await user.matchPassword(password))) {
+    if (user && (await user.matchPassword(String(password)))) {
       res.json({
         _id: user._id,
         name: user.name,
@@ -66,6 +69,56 @@ export const loginUser = async (req: Request, res: Response) => {
     } else {
       res.status(401).json({ message: 'Invalid email or password' });
     }
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const forgotPassword = async (req: Request, res: Response) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email: String(email).toLowerCase() });
+
+    if (!user) {
+      res.status(200).json({ message: 'If that email is registered, a reset link has been sent.' });
+      return;
+    }
+
+    const token = crypto.randomBytes(20).toString('hex');
+    user.resetToken = token;
+    user.resetTokenExpires = new Date(Date.now() + 60 * 60 * 1000);
+    await user.save();
+
+    res.status(200).json({
+      message: 'Password reset instructions have been sent. Use the reset code in your secure workflow.',
+      resetToken: token,
+    });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const resetPassword = async (req: Request, res: Response) => {
+  try {
+    const { token, password } = req.body;
+
+    const user = await User.findOne({
+      resetToken: String(token),
+      resetTokenExpires: { $gt: new Date() },
+    });
+
+    if (!user) {
+      res.status(400).json({ message: 'Invalid or expired reset token.' });
+      return;
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    user.passwordHash = await bcrypt.hash(String(password), salt);
+    user.resetToken = undefined;
+    user.resetTokenExpires = undefined;
+    await user.save();
+
+    res.json({ message: 'Password reset successful.' });
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }

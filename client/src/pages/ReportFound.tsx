@@ -12,6 +12,7 @@ const ReportFound = () => {
     description: '',
     location: '',
     dateLostOrFound: '',
+    imageUrl: '',
   });
 
   if (!user) {
@@ -32,6 +33,18 @@ const ReportFound = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = typeof reader.result === 'string' ? reader.result : '';
+      setFormData((current) => ({ ...current, imageUrl: result }));
+    };
+    reader.readAsDataURL(file);
   };
 
   return (
@@ -67,6 +80,15 @@ const ReportFound = () => {
         <div>
           <label className="block text-gray-700 font-bold mb-1">Description</label>
           <textarea name="description" required value={formData.description} onChange={handleChange} className="w-full border p-2 rounded h-32" placeholder="e.g., Found a blue hydroflask left behind"></textarea>
+        </div>
+        <div>
+          <label className="block text-gray-700 font-bold mb-1">Upload picture</label>
+          <input type="file" accept="image/*" onChange={handleImageUpload} className="w-full border p-2 rounded bg-gray-50" />
+          <p className="text-xs text-gray-500 mt-1">Or paste an image URL below.</p>
+          <input name="imageUrl" value={formData.imageUrl} onChange={handleChange} className="w-full border p-2 rounded mt-2" placeholder="https://example.com/found-item.jpg" />
+          {formData.imageUrl && (
+            <img src={formData.imageUrl} alt="Item preview" className="mt-3 h-40 object-cover rounded border" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+          )}
         </div>
         <button type="submit" className="w-full bg-green-600 text-white font-bold py-3 rounded hover:bg-green-700">Submit Found Report</button>
       </form>

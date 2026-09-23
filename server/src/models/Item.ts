@@ -9,6 +9,7 @@ export interface IItem extends mongoose.Document {
   color?: string;
   location: string;
   dateLostOrFound: Date;
+  imageUrl?: string;
   status: 'REPORTED' | 'MATCH_FOUND' | 'CLAIMED' | 'RETURNED' | 'CLOSED';
   reporter: mongoose.Schema.Types.ObjectId;
 }
@@ -27,6 +28,7 @@ const itemSchema = new mongoose.Schema(
     color: { type: String },
     location: { type: String, required: true },
     dateLostOrFound: { type: Date, required: true },
+    imageUrl: { type: String },
     status: {
       type: String,
       enum: ['REPORTED', 'MATCH_FOUND', 'CLAIMED', 'RETURNED', 'CLOSED'],

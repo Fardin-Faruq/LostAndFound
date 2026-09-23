@@ -7,6 +7,7 @@ const Register = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [role, setRole] = useState<'STUDENT' | 'ADMIN'>('STUDENT');
   const [error, setError] = useState('');
   const navigate = useNavigate();
   const { login } = useContext(AuthContext);
@@ -14,9 +15,9 @@ const Register = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const { data } = await api.post('/auth/register', { name, email, password });
+      const { data } = await api.post('/auth/register', { name, email, password, role });
       login(data);
-      navigate('/');
+      navigate(data.role === 'ADMIN' ? '/office' : '/');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Registration failed');
     }
@@ -24,7 +25,7 @@ const Register = () => {
 
   return (
     <div className="max-w-md mx-auto mt-10 bg-white p-8 rounded shadow">
-      <h2 className="text-2xl font-bold mb-6 text-center">Student Registration</h2>
+      <h2 className="text-2xl font-bold mb-6 text-center">Create an Account</h2>
       {error && <div className="bg-red-100 text-red-700 p-3 mb-4 rounded">{error}</div>}
       <form onSubmit={handleSubmit}>
         <div className="mb-4">
@@ -32,7 +33,14 @@ const Register = () => {
           <input type="text" value={name} onChange={e => setName(e.target.value)} required className="w-full border p-2 rounded" />
         </div>
         <div className="mb-4">
-          <label className="block text-gray-700 mb-2">University Email</label>
+          <label className="block text-gray-700 mb-2">Account Type</label>
+          <select value={role} onChange={e => setRole(e.target.value as 'STUDENT' | 'ADMIN')} className="w-full border p-2 rounded">
+            <option value="STUDENT">Normal User</option>
+            <option value="ADMIN">Lost &amp; Found Office</option>
+          </select>
+        </div>
+        <div className="mb-4">
+          <label className="block text-gray-700 mb-2">Email</label>
           <input type="email" value={email} onChange={e => setEmail(e.target.value)} required className="w-full border p-2 rounded" />
         </div>
         <div className="mb-6">
