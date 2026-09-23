@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import api from '../services/api';
+import { getImageUrl } from '../utils/imageUrl';
 
 interface ItemDetail {
   _id: string;
@@ -23,6 +24,7 @@ const ItemDetails = () => {
   const [item, setItem] = useState<ItemDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [imageError, setImageError] = useState(false);
   const [proofDetails, setProofDetails] = useState('');
   const [claimMessage, setClaimMessage] = useState('');
   const [claimSubmitting, setClaimSubmitting] = useState(false);
@@ -66,90 +68,194 @@ const ItemDetails = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-sm border border-gray-200 p-8">
-      <div className="mb-6">
-        <Link to="/browse" className="text-indigo-600 font-semibold">← Back to browse</Link>
+    <div className="max-w-5xl mx-auto space-y-6 pb-12">
+      {/* Back button */}
+      <div>
+        <Link
+          to="/browse"
+          className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-600 hover:text-indigo-600 transition-colors bg-white px-3.5 py-1.5 rounded-xl border border-slate-200/80 shadow-sm"
+        >
+          <span>←</span> Back to all items
+        </Link>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div className="bg-gray-100 rounded-lg p-6 min-h-[220px] flex items-center justify-center">
-          {item.imageUrl ? (
-            <img src={item.imageUrl} alt={item.title} className="max-h-80 w-full object-cover rounded-lg" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-          ) : (
-            <div className="text-center">
-              <div className="text-5xl mb-4">{item.type === 'LOST' ? '📦' : '✅'}</div>
-              <p className="text-gray-600 font-semibold">
-                {item.type === 'LOST' ? 'Lost Item' : 'Found Item'}
+      {/* Main Item Card */}
+      <div className="bg-white rounded-3xl shadow-sm border border-slate-200/90 overflow-hidden">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-0">
+          {/* Left Column: Image Area */}
+          <div className="lg:col-span-5 bg-slate-50/80 p-6 sm:p-8 flex flex-col items-center justify-center border-b lg:border-b-0 lg:border-r border-slate-200/80">
+            <div className="w-full max-w-sm aspect-square bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex items-center justify-center relative">
+              {item.imageUrl && !imageError ? (
+                <img
+                  src={getImageUrl(item.imageUrl)}
+                  alt={item.title}
+                  className="w-full h-full object-cover"
+                  crossOrigin="anonymous"
+                  onError={() => setImageError(true)}
+                />
+              ) : (
+                <div className="text-center p-6">
+                  <div className="text-6xl mb-3">{item.type === 'LOST' ? '🔍' : '📦'}</div>
+                  <p className="text-sm font-bold text-slate-700">
+                    {item.type === 'LOST' ? 'Lost Item Report' : 'Found Item'}
+                  </p>
+                  <span className="inline-block mt-2 text-xs font-semibold bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full border border-slate-200">
+                    {item.category}
+                  </span>
+                </div>
+              )}
+
+              {/* Type Badge on Top of Image */}
+              <div className="absolute top-3 left-3">
+                <span
+                  className={`text-xs font-extrabold px-3 py-1 rounded-full shadow-sm ${
+                    item.type === 'LOST'
+                      ? 'bg-rose-500 text-white'
+                      : 'bg-emerald-600 text-white'
+                  }`}
+                >
+                  {item.type}
+                </span>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-400 mt-4 text-center">
+              Item ID: <span className="font-mono">{item._id}</span>
+            </p>
+          </div>
+
+          {/* Right Column: Details & Claim Area */}
+          <div className="lg:col-span-7 p-6 sm:p-8 space-y-6">
+            {/* Header info */}
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 border border-indigo-100 px-2.5 py-0.5 rounded-full">
+                  {item.category}
+                </span>
+                <span
+                  className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${
+                    item.status === 'REPORTED'
+                      ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                      : item.status === 'MATCH_FOUND'
+                      ? 'bg-purple-50 text-purple-700 border border-purple-200'
+                      : item.status === 'CLAIMED'
+                      ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                      : item.status === 'RETURNED'
+                      ? 'bg-slate-100 text-slate-700 border border-slate-200'
+                      : 'bg-slate-100 text-slate-600'
+                  }`}
+                >
+                  {item.status.replace('_', ' ')}
+                </span>
+              </div>
+
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+                {item.title}
+              </h1>
+
+              <p className="text-sm text-slate-600 mt-3 leading-relaxed">
+                {item.description || 'No detailed description was provided for this item.'}
               </p>
             </div>
-          )}
-        </div>
 
-        <div>
-          <div className="flex items-center justify-between gap-3 mb-4">
-            <h1 className="text-3xl font-bold text-gray-900">{item.title}</h1>
-            <span className={`px-3 py-1 rounded-full text-xs font-bold text-white ${item.type === 'LOST' ? 'bg-red-500' : 'bg-green-500'}`}>
-              {item.type}
-            </span>
-          </div>
+            {/* Metadata Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-4 rounded-2xl bg-slate-50 border border-slate-100 text-xs">
+              <div>
+                <span className="text-slate-400 block font-semibold">Location</span>
+                <span className="font-bold text-slate-800 text-sm mt-0.5 block truncate">{item.location}</span>
+              </div>
+              <div>
+                <span className="text-slate-400 block font-semibold">Date Reported</span>
+                <span className="font-bold text-slate-800 text-sm mt-0.5 block">
+                  {new Date(item.dateLostOrFound).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                </span>
+              </div>
+              <div>
+                <span className="text-slate-400 block font-semibold">Brand</span>
+                <span className="font-bold text-slate-800 text-sm mt-0.5 block">{item.brand || '—'}</span>
+              </div>
+              <div>
+                <span className="text-slate-400 block font-semibold">Color</span>
+                <span className="font-bold text-slate-800 text-sm mt-0.5 block">{item.color || '—'}</span>
+              </div>
+              <div className="col-span-2 sm:col-span-2">
+                <span className="text-slate-400 block font-semibold">Reported By</span>
+                <span className="font-bold text-slate-800 text-sm mt-0.5 block">
+                  {item.reporter?.name ? item.reporter.name : 'Campus Community Member'}
+                </span>
+              </div>
+            </div>
 
-          <p className="text-sm font-semibold text-indigo-600 mb-3">{item.category}</p>
-          <p className="text-gray-700 mb-6">{item.description}</p>
+            {/* Claim Section (only if item is not returned or closed) */}
+            {item.status !== 'RETURNED' && (
+              <div className="pt-4 border-t border-slate-100 space-y-3">
+                <div>
+                  <h3 className="text-base font-bold text-slate-900 flex items-center gap-1.5">
+                    <span>📋</span> Claim This Item
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Describe any unique marks, serial numbers, wallpapers, or identifying features so staff can verify ownership.
+                  </p>
+                </div>
 
-          <div className="grid grid-cols-2 gap-4 text-sm text-gray-700">
-            <div><span className="font-semibold">Brand:</span> {item.brand || 'Not provided'}</div>
-            <div><span className="font-semibold">Color:</span> {item.color || 'Not provided'}</div>
-            <div><span className="font-semibold">Location:</span> {item.location}</div>
-            <div><span className="font-semibold">Date:</span> {new Date(item.dateLostOrFound).toLocaleDateString()}</div>
-            <div className="col-span-2"><span className="font-semibold">Status:</span> {item.status.replace('_', ' ')}</div>
-            <div className="col-span-2"><span className="font-semibold">Reported by:</span> {item.reporter?.name || 'Unknown'}</div>
-          </div>
+                <textarea
+                  value={proofDetails}
+                  onChange={(e) => setProofDetails(e.target.value)}
+                  placeholder="e.g., The phone has a cracked screen protector and a photo of a golden retriever as the lock screen..."
+                  className="w-full text-sm border border-slate-200 rounded-xl p-3.5 h-28 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 bg-slate-50/50 focus:bg-white transition-all"
+                />
 
-          <div className="mt-8 border-t border-gray-200 pt-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-3">Claim this item</h2>
-            <p className="text-sm text-gray-600 mb-3">
-              Provide a short proof summary so the office can verify ownership before approval.
-            </p>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    disabled={claimSubmitting || !proofDetails.trim()}
+                    onClick={async () => {
+                      if (!id || !proofDetails.trim()) return;
 
-            <textarea
-              value={proofDetails}
-              onChange={(e) => setProofDetails(e.target.value)}
-              placeholder="Example: I lost a blue water bottle with a silver cap and my student ID sticker."
-              className="w-full border border-gray-300 rounded-lg p-3 h-28 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            />
+                      setClaimSubmitting(true);
+                      setClaimMessage('');
 
-            <button
-              type="button"
-              disabled={claimSubmitting || !proofDetails.trim()}
-              onClick={async () => {
-                if (!id || !proofDetails.trim()) return;
+                      try {
+                        const { data } = await api.post(`/items/${id}/claims`, {
+                          proofDetails: proofDetails.trim(),
+                        });
 
-                setClaimSubmitting(true);
-                setClaimMessage('');
+                        setClaimMessage(`Claim submitted successfully! Status: ${data.status}. The office will review your request.`);
+                        setProofDetails('');
+                      } catch (err: any) {
+                        setClaimMessage(err.response?.data?.message || 'Unable to submit claim. Please try again.');
+                      } finally {
+                        setClaimSubmitting(false);
+                      }
+                    }}
+                    className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-5 rounded-xl text-sm transition-all shadow-sm hover:shadow-indigo-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {claimSubmitting ? 'Submitting Claim...' : 'Submit Ownership Claim'}
+                  </button>
+                </div>
 
-                try {
-                  const { data } = await api.post(`/items/${id}/claims`, {
-                    proofDetails: proofDetails.trim(),
-                  });
-
-                  setClaimMessage(`Claim submitted successfully. Status: ${data.status}`);
-                  setProofDetails('');
-                } catch (err: any) {
-                  setClaimMessage(err.response?.data?.message || 'Unable to submit claim.');
-                } finally {
-                  setClaimSubmitting(false);
-                }
-              }}
-              className="mt-3 w-full bg-indigo-600 text-white font-bold py-3 rounded-lg hover:bg-indigo-700 disabled:bg-indigo-300"
-            >
-              {claimSubmitting ? 'Submitting...' : 'Submit Claim'}
-            </button>
-
-            {claimMessage && (
-              <p className="mt-3 text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg p-3">
-                {claimMessage}
-              </p>
+                {claimMessage && (
+                  <div className={`p-3.5 rounded-xl text-xs font-semibold ${
+                    claimMessage.includes('successfully')
+                      ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                      : 'bg-rose-50 text-rose-800 border border-rose-200'
+                  }`}>
+                    {claimMessage}
+                  </div>
+                )}
+              </div>
             )}
+
+            {/* Office Physical Pickup Directions */}
+            <div className="bg-indigo-50/60 border border-indigo-100/80 rounded-2xl p-4 flex items-start gap-3 text-xs text-indigo-950">
+              <span className="text-xl">🏢</span>
+              <div>
+                <p className="font-bold text-indigo-900">Student Welfare Office</p>
+                <p className="text-indigo-800/80 mt-0.5">
+                  PRP Anx, 2nd Floor · Mon–Fri 8:30 AM – 5:00 PM. Please bring your campus ID card for physical retrieval.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -158,3 +264,4 @@ const ItemDetails = () => {
 };
 
 export default ItemDetails;
+

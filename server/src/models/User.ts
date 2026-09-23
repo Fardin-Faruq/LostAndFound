@@ -5,7 +5,7 @@ export interface IUser extends mongoose.Document {
   name: string;
   email: string;
   passwordHash: string;
-  role: 'STUDENT' | 'ADMIN';
+  role: 'STUDENT' | 'OFFICE_STAFF' | 'ADMIN';
   resetToken?: string;
   resetTokenExpires?: Date;
   matchPassword(enteredPassword: string): Promise<boolean>;
@@ -28,7 +28,7 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ['STUDENT', 'ADMIN'],
+      enum: ['STUDENT', 'OFFICE_STAFF', 'ADMIN'],
       default: 'STUDENT',
     },
     resetToken: {

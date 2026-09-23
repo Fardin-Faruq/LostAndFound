@@ -17,4 +17,10 @@ api.interceptors.request.use((config) => {
   return Promise.reject(error);
 });
 
+export const notificationApi = {
+  getNotifications: () => api.get('/notifications'),
+  markAsRead: (id: string) => api.put(`/notifications/${id}/read`),
+  markAllAsRead: () => api.put('/notifications/read-all'),
+};
+
 export default api;

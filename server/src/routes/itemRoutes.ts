@@ -1,5 +1,13 @@
 import express from 'express';
-import { createItem, getItems, getItemById, createClaim, getMyItems, getMatchesForUser } from '../controllers/itemController';
+import {
+  createItem,
+  getItems,
+  getItemById,
+  createClaim,
+  getMyItems,
+  getMatchesForUser,
+  getItemMatches,
+} from '../controllers/itemController';
 import { protect } from '../middleware/authMiddleware';
 
 const router = express.Router();
@@ -14,7 +22,10 @@ router.get('/matches', protect, getMatchesForUser);
 router.route('/:id/claims')
   .post(protect, createClaim);
 
+router.get('/:id/matches', protect, getItemMatches);
+
 router.route('/:id')
   .get(getItemById);
 
 export default router;
+

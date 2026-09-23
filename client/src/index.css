@@ -1,7 +1,246 @@
 @import "tailwindcss";
 
+/* ============================================================
+   TAILWIND V4: Force class-based dark mode (NOT media-query)
+   Without this, dark: classes use prefers-color-scheme instead
+   of our .dark class toggle.
+   ============================================================ */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ============================================================
+   DESIGN SYSTEM — Light & Dark Mode Tokens
+   ============================================================ */
 @layer base {
+  :root {
+    --font-sans: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+    /* Surface colors */
+    --bg-base:        #f8fafc;
+    --bg-card:        #ffffff;
+    --bg-subtle:      #f1f5f9;
+    --bg-nav:         rgba(255, 255, 255, 0.94);
+
+    /* Text colors */
+    --text-primary:   #0f172a;
+    --text-secondary: #475569;
+    --text-muted:     #94a3b8;
+
+    /* Border */
+    --border-base:    rgba(226, 232, 240, 0.85);
+
+    /* Brand */
+    --brand:          #4f46e5;
+    --brand-hover:    #4338ca;
+
+    /* Scrollbar */
+    --scrollbar-track:  #f1f5f9;
+    --scrollbar-thumb:  #cbd5e1;
+    --scrollbar-hover:  #94a3b8;
+  }
+
+  /* ── Dark Mode Overrides via .dark on <html> ── */
+  :root.dark {
+    --bg-base:        #0c111d;
+    --bg-card:        #131929;
+    --bg-subtle:      #1a2236;
+    --bg-nav:         rgba(13, 17, 28, 0.96);
+
+    --text-primary:   #e8eeff;
+    --text-secondary: #8fa3bf;
+    --text-muted:     #4a5568;
+
+    --border-base:    rgba(255, 255, 255, 0.09);
+
+    --brand:          #818cf8;
+    --brand-hover:    #a5b4fc;
+
+    --scrollbar-track:  #131929;
+    --scrollbar-thumb:  #2d3a54;
+    --scrollbar-hover:  #4a5568;
+  }
+
   body {
-    @apply bg-gray-50 text-gray-900 antialiased;
+    font-family: var(--font-sans);
+    background-color: var(--bg-base);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transition: background-color 0.3s ease, color 0.3s ease;
+
+    background-image:
+      radial-gradient(at 100% 0%, rgba(99, 102, 241, 0.06) 0px, transparent 50%),
+      radial-gradient(at 0% 100%, rgba(14, 165, 233, 0.05) 0px, transparent 50%);
+    background-attachment: fixed;
+  }
+
+  :root.dark body {
+    background-image:
+      radial-gradient(at 100% 0%, rgba(99, 102, 241, 0.09) 0px, transparent 50%),
+      radial-gradient(at 0% 100%, rgba(56, 189, 248, 0.05) 0px, transparent 50%);
   }
 }
+
+/* ============================================================
+   SCROLLBAR
+   ============================================================ */
+::-webkit-scrollbar { width: 7px; height: 7px; }
+::-webkit-scrollbar-track { background: var(--scrollbar-track); }
+::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 9999px; }
+::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-hover); }
+
+/* ============================================================
+   GLASSMORPHISM UTILITIES
+   ============================================================ */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+}
+:root.dark .glass-panel {
+  background: rgba(19, 25, 41, 0.88);
+  border-color: rgba(255, 255, 255, 0.07);
+}
+
+.glass-nav {
+  background: var(--bg-nav);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-bottom: 1px solid var(--border-base);
+}
+
+/* ============================================================
+   GRADIENT UTILITIES
+   ============================================================ */
+.gradient-text-indigo {
+  background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+:root.dark .gradient-text-indigo {
+  background: linear-gradient(135deg, #818cf8 0%, #38bdf8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ============================================================
+   CARD HOVER MICRO-ANIMATION
+   ============================================================ */
+.card-hover {
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.card-hover:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px -6px rgba(15, 23, 42, 0.08), 0 4px 10px -2px rgba(15, 23, 42, 0.03);
+}
+:root.dark .card-hover:hover {
+  box-shadow: 0 12px 28px -6px rgba(0, 0, 0, 0.4), 0 4px 10px -2px rgba(0, 0, 0, 0.25);
+}
+
+/* ============================================================
+   NAVBAR BRAND — Explicit color tokens (no dark: reliance)
+   ============================================================ */
+.nav-brand-text {
+  color: var(--text-primary);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+}
+.nav-brand-accent {
+  color: #4f46e5;
+}
+:root.dark .nav-brand-accent {
+  color: #818cf8;
+}
+.nav-brand-sub {
+  color: var(--text-muted);
+  font-size: 0.625rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* ============================================================
+   THEME TRANSITION
+   ============================================================ */
+html {
+  transition: background-color 0.25s ease;
+}
+
+/* ============================================================
+   DARK MODE — Global Tailwind Class Overrides
+   Remaps hardcoded slate/gray text classes so every page's
+   headings and body text become readable without touching
+   individual components.
+   ============================================================ */
+:root.dark .text-slate-900,
+:root.dark .text-gray-900 {
+  color: #f0f4ff !important;
+}
+
+:root.dark .text-slate-800,
+:root.dark .text-gray-800 {
+  color: #dde5f5 !important;
+}
+
+:root.dark .text-slate-700,
+:root.dark .text-gray-700 {
+  color: #c4cfea !important;
+}
+
+:root.dark .text-slate-600,
+:root.dark .text-gray-600 {
+  color: #9aaac8 !important;
+}
+
+:root.dark .text-slate-500,
+:root.dark .text-gray-500 {
+  color: #6b7fa0 !important;
+}
+
+:root.dark .text-slate-400,
+:root.dark .text-gray-400 {
+  color: #4e5f7d !important;
+}
+
+/* Cards, panels, and surfaces */
+:root.dark .bg-white {
+  background-color: #131929 !important;
+}
+
+:root.dark .bg-slate-50,
+:root.dark .bg-gray-50 {
+  background-color: #0f1623 !important;
+}
+
+:root.dark .bg-slate-100,
+:root.dark .bg-gray-100 {
+  background-color: #1a2236 !important;
+}
+
+/* Borders */
+:root.dark .border-slate-200,
+:root.dark .border-gray-200 {
+  border-color: rgba(255,255,255,0.09) !important;
+}
+
+:root.dark .border-slate-100,
+:root.dark .border-gray-100 {
+  border-color: rgba(255,255,255,0.06) !important;
+}
+
+/* Input fields */
+:root.dark input,
+:root.dark textarea,
+:root.dark select {
+  background-color: #1a2236;
+  color: #e8eeff;
+  border-color: rgba(255,255,255,0.12);
+}
+
+:root.dark input::placeholder,
+:root.dark textarea::placeholder {
+  color: #4e5f7d;
+}
+
